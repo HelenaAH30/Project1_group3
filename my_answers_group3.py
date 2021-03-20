@@ -28,9 +28,11 @@ class NeuralNetwork(object):
         #
         
         # GROUP 3 (19/03/2021):
-        def sigmoid(x):
-            return 1 / (1 + np.exp(-x))
-        self.activation_function = sigmoid
+        # def sigmoid(x):
+        #     return 1 / (1 + np.exp(-x))
+        # self.activation_function = sigmoid
+
+        self.activation_function = lambda x : 1 / (1 + np.exp(-x))
                     
 
     def train(self, features, targets):
@@ -109,12 +111,12 @@ class NeuralNetwork(object):
         # TODO: Backpropagated error terms - Replace these values with your calculations.
         
         # GROUP 3 (19/03/2021): error_term = (y - y_pred) * f'(x) = (y - y_pred) * 1
-        output_error_term = error * 1
+        output_error_term = error * 1.0
         
         # TODO: Calculate the hidden layer's contribution to the error
         
         # GROUP 3 (19/03/2021): hidden_error = error_term * W = (y - y_pred) * f'(x) * W = (y - y_pred) * 1 * W
-        hidden_error = np.dot(output_error_term, self.weights_hidden_to_output.T) 
+        hidden_error = np.dot( self.weights_hidden_to_output.T,output_error_term) 
         
         # GROUP 3 (19/03/2021): hidden_error_term = error_term * W * sigmoid_prime(x) = 
         # = (y - y_pred) * f'(x) * W * sigmoid_prime(x)
