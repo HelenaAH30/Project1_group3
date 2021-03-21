@@ -52,8 +52,7 @@ class NeuralNetwork(object):
             
             final_outputs, hidden_outputs = self.forward_pass_train(X)  # Implement the forward pass function below
             # Implement the backproagation function below
-            delta_weights_i_h, delta_weights_h_o = self.backpropagation(final_outputs, hidden_outputs, X, y, 
-                                                                        delta_weights_i_h, delta_weights_h_o)
+            delta_weights_i_h, delta_weights_h_o = self.backpropagation(final_outputs, hidden_outputs, X, y, delta_weights_i_h, delta_weights_h_o)
         self.update_weights(delta_weights_i_h, delta_weights_h_o, n_records)
 
 
@@ -71,7 +70,7 @@ class NeuralNetwork(object):
         
         # signals into hidden layer
         # Group 3 (19/03/2021): X * W_i_h 
-        hidden_inputs = np.dot(X, self.weights_input_to_hidden) 
+        hidden_inputs = np.matmul(X, self.weights_input_to_hidden) #
         
         # signals from hidden layer
         # Group 3 (19/03/2021): sigmoid(hidden_inputs) 
@@ -81,7 +80,7 @@ class NeuralNetwork(object):
         
         # signals into final output layer
         # Group 3 (19/03/2021): hidden_outputs * W_h_o
-        final_inputs = np.dot(hidden_outputs, self.weights_hidden_to_output)  
+        final_inputs = np.matmul(hidden_outputs, self.weights_hidden_to_output)  
         
         # signals from final output layer
         # Group 3 (19/03/2021): f(x) = x
@@ -115,25 +114,25 @@ class NeuralNetwork(object):
         
         # TODO: Calculate the hidden layer's contribution to the error
         
-        # GROUP 3 (19/03/2021): hidden_error = error_term * W = (y - y_pred) * f'(x) * W = (y - y_pred) * 1 * W
-        hidden_error = np.dot( self.weights_hidden_to_output.T,output_error_term) 
+        # GROUP 3 (19/03/2021): hidden_error = W * error_term = W * (y - y_pred) * f'(x) = W * (y - y_pred) * 1
+        hidden_error = np.dot(self.weights_hidden_to_output, output_error_term)
         
-        # GROUP 3 (19/03/2021): hidden_error_term = error_term * W * sigmoid_prime(x) = 
-        # = (y - y_pred) * f'(x) * W * sigmoid_prime(x)
-        # = (y - y_pred) * 1 * W * sigmoid(x) * (1 - sigmoid(x))
-        hidden_error_term = hidden_error * hidden_outputs * (1 - hidden_outputs)
+        # GROUP 3 (19/03/2021): hidden_error_term = W * error_term * sigmoid_prime(x) = 
+        # = W * (y - y_pred) * f'(x) * sigmoid_prime(x)
+        # = W * (y - y_pred) * 1 * (sigmoid(x) * (1 - sigmoid(x))) = hidden_error * (sigmoid(x) * (1 - sigmoid(x))) =
+        hidden_error_term = hidden_error.T * (hidden_outputs * (1 - hidden_outputs))
         
         # Weight step (input to hidden)
         
-        # GROUP 3 (19/03/2021): (y - y_pred) * f'(x) * W  * sigmoid_prime(x) * X =
-        # = (y - y_pred) * 1 * W * sigmoid(x) * (1 - sigmoid(x)) * X = hidden_error_term * X
-        delta_weights_i_h += hidden_error_term * X
+        # GROUP 3 (19/03/2021): X * W * (y - y_pred) * f'(x) * sigmoid_prime(x) =
+        # = X * W * (y - y_pred) * 1 * (sigmoid(x) * (1 - sigmoid(x))) = X * hidden_error_term 
+        delta_weights_i_h += X.reshape(-1, 1) * hidden_error_term
         
         # Weight step (hidden to output)
         
-        # GROUP 3 (19/03/2021): (y - y_pred) * f'(x) * sigmoid(x) =
-        # = (y - y_pred) * 1 * sigmoid(x) = output_error_term * hidden_outputs
-        delta_weights_h_o += output_error_term * hidden_outputs
+        # GROUP 3 (19/03/2021): sigmoid(x) * (y - y_pred) * f'(x)  =
+        # = sigmoid(x) * (y - y_pred) * 1  = hidden_outputs * output_error_term
+        delta_weights_h_o += hidden_outputs.reshape(-1, 1) * output_error_term
         
         return delta_weights_i_h, delta_weights_h_o
 
@@ -193,7 +192,12 @@ class NeuralNetwork(object):
 #########################################################
 # Set your hyperparameters here
 ##########################################################
-iterations = 100
-learning_rate = 0.1
-hidden_nodes = 2
+# iterations = 1000
+# learning_rate = 0.1
+# hidden_nodes = 2
+# output_nodes = 1
+
+iterations = 12000
+learning_rate = 0.5
+hidden_nodes = 23
 output_nodes = 1
