@@ -1,14 +1,25 @@
+'''
+Autores: Antich Homar, Helena 
+         Muntaner Ferrer, Joan 
+         Nordfeldt Fiol, Bo Miquel
+         
+Fecha: Marzo 2021
+
+Descripción: Implementación del feedforward y backpropagation de una red neuronal
+'''
 import numpy as np
 
 
 class NeuralNetwork(object):
+    
     def __init__(self, input_nodes, hidden_nodes, output_nodes, learning_rate):
-        # Set number of nodes in input, hidden and output layers.
+        
+        # Asignación del número de neuronas de entrada, ocultas y de salida.
         self.input_nodes = input_nodes
         self.hidden_nodes = hidden_nodes
         self.output_nodes = output_nodes
 
-        # Initialize weights
+        # Inicialización de los pesos y declaración del learning rate.
         self.weights_input_to_hidden = np.random.normal(0.0, self.input_nodes**-0.5, 
                                        (self.input_nodes, self.hidden_nodes))
 
@@ -16,174 +27,157 @@ class NeuralNetwork(object):
                                        (self.hidden_nodes, self.output_nodes))
         self.lr = learning_rate
         
-        #### TODO: Set self.activation_function to your implemented sigmoid function ####
-        #
-        # Note: in Python, you can define a function with a lambda expression,
-        # as shown below.
-        #self.activation_function = lambda x : 0  # Replace 0 with your sigmoid calculation.
-        
-        ### If the lambda code above is not something you're familiar with,
-        # You can uncomment out the following three lines and put your 
-        # implementation there instead.
-        #
-        
-        # GROUP 3 (19/03/2021):
-        # def sigmoid(x):
-        #     return 1 / (1 + np.exp(-x))
-        # self.activation_function = sigmoid
-
+        # Implementación de la función de activación para la capa oculta de la red neuronal utilizando la función
+        # sigmoide (sigmoide(x) = 1 / (1 + e^-x)). Para ello utilizamos una expresión o función lambda, es decir 
+        # una función anonima.
         self.activation_function = lambda x : 1 / (1 + np.exp(-x))
                     
 
     def train(self, features, targets):
-        ''' Train the network on batch of features and targets. 
+        ''' Entrenamiento de la red mediantes lotes (también conocidos como batches) de caracterísitcas (features)
+            y outputs deseados (targets).
         
-            Arguments
+            Parámetros
             ---------
             
-            features: 2D array, each row is one data record, each column is a feature
-            targets: 1D array of target values
-        
+            features: array de 2 dimensiones, cada fila es un registo de datos y cada columna es una caracterísitca (o feature).
+            targets: array de una dimensión con los valores de los objetivos.
         '''
+        
+        # Cantidad de datos.
         n_records = features.shape[0]
+        
+        # Variables para guardar los cambios que se deben realizar en los pesos de todas las neuronas.
         delta_weights_i_h = np.zeros(self.weights_input_to_hidden.shape)
         delta_weights_h_o = np.zeros(self.weights_hidden_to_output.shape)
+        
         for X, y in zip(features, targets):
             
-            final_outputs, hidden_outputs = self.forward_pass_train(X)  # Implement the forward pass function below
-            # Implement the backproagation function below
+            # Feedforward: la red neuronal transforma las entradas en salidas.
+            final_outputs, hidden_outputs = self.forward_pass_train(X)  
+            
+            # Backpropagation: la red determina la contribución del error de cada uno de los pesos que hay entre sus neuronas y guarda
+            # en delta_weights_i_h o en delta_weights_h_o lo que debería cambiar cada peso para subsanar su contribución al error.
             delta_weights_i_h, delta_weights_h_o = self.backpropagation(final_outputs, hidden_outputs, X, y, delta_weights_i_h, delta_weights_h_o)
+            
+        # Cuando se tiene calculado cuanto debería variar cada peso para corregir su contribución al error se actualiza.
         self.update_weights(delta_weights_i_h, delta_weights_h_o, n_records)
 
 
     def forward_pass_train(self, X):
-        ''' Implement forward pass here 
+        ''' Implementación del feedforward utilizando datos agrupados por lotes
          
-            Arguments
+            Parámetros
             ---------
-            X: features batch
-
+            X: lote de caracterísitcas o features
         '''
-        #### Implement the forward pass here ####
-        ### Forward pass ###
-        ## TODO: Hidden layer - Replace these values with your calculations.
         
-        # signals into hidden layer
-        # Group 3 (19/03/2021): X * W_i_h 
-        hidden_inputs = np.matmul(X, self.weights_input_to_hidden) #
+        # Cálculo de los valores de entrada de la capa oculta. Para ello se debe multiplicar el lote de caracterísitcas por
+        # los pesos de las conexiones que hay entre los inputs (las características) y las neuronas de la capa oculta: X * W_i_h.
+        hidden_inputs = np.dot(X, self.weights_input_to_hidden) # np.matmul o np.dot ?
         
-        # signals from hidden layer
-        # Group 3 (19/03/2021): sigmoid(hidden_inputs) 
+        # Cálculo de las salidas de las neuronas ocultas. Se utilizan los valores de entrada de cada neurona como inputs para
+        # su función de activación: sigmoid(hidden_inputs) 
         hidden_outputs = self.activation_function(hidden_inputs) 
-
-        # TODO: Output layer - Replace these values with your calculations.
         
-        # signals into final output layer
-        # Group 3 (19/03/2021): hidden_outputs * W_h_o
-        final_inputs = np.matmul(hidden_outputs, self.weights_hidden_to_output)  
+        # Cálculo de los valores de entrada de la capa de salida de la red neuronal. Para ello se deben multiplicar las salidas
+        # de las neuronas ocultas por los pesos que hay entre la capa de oculta y la capa de salida: hidden_outputs * W_h_o
+        final_inputs = np.dot(hidden_outputs, self.weights_hidden_to_output) # np.matmul o np.dot ?
         
-        # signals from final output layer
-        # Group 3 (19/03/2021): f(x) = x
+        # Cálculo de las salidas de las neuronas de salida de la red neuronal. Como la función de activación de las neuronas
+        # de esta capa es f(x) = x, simplemente se debe igualar el output de estas neuronas a su input.
         final_outputs = final_inputs 
         
         return final_outputs, hidden_outputs
 
+
     def backpropagation(self, final_outputs, hidden_outputs, X, y, delta_weights_i_h, delta_weights_h_o):
-        ''' Implement backpropagation
+        ''' Implementación de backpropagation
          
-            Arguments
+            Parámetros
             ---------
-            final_outputs: output from forward pass
-            y: target (i.e. label) batch
-            delta_weights_i_h: change in weights from input to hidden layers
-            delta_weights_h_o: change in weights from hidden to output layers
-
+            final_outputs: output de toda la red neuronal
+            hidden_outputs: salida de las neuronas ocultas
+            X: lotes de inputs
+            y: lotes de outputs deseados
+            delta_weights_i_h: cambio de los pesos entre los inputs y la capa oculta
+            delta_weights_h_o: cambio de los pesos entre la capa oculta y la salida
         '''
-        #### Implement the backward pass here ####
-        ### Backward pass ###
-
-        # TODO: Output error - Replace this value with your calculations.
         
-        # GROUP 3 (19/03/2021): e = y - y_pred
+        # Error global de la red neuronal. Para calcularlo se debe restar el ouput predecido al output deseado: error = y - y_pred.
         error = y - final_outputs 
         
-        # TODO: Backpropagated error terms - Replace these values with your calculations.
-        
-        # GROUP 3 (19/03/2021): error_term = (y - y_pred) * f'(x) = (y - y_pred) * 1
+        # Cálculo de la contribución al error global de la capa de salida, para ello se debe multiplicar el error global de la red por la 
+        # derivada de la función de activación de la última capa: output_error_term = (y - y_pred) * f'(x) = (y - y_pred) * 1
         output_error_term = error * 1.0
         
-        # TODO: Calculate the hidden layer's contribution to the error
-        
-        # GROUP 3 (19/03/2021): hidden_error = W * error_term = W * (y - y_pred) * f'(x) = W * (y - y_pred) * 1
+        # Cálculo de la contribución al error de los pesos entre la capa oculta y la capa de output. Para ello se deben multiplicar 
+        # los pesos entre estas dos capas por el output_error_term: hidden_error = W_h_o * (y - y_pred) * f'(x) = 
+        # = W_h_o * (y - y_pred) * 1 = W_h_o * output_error_term 
         hidden_error = np.dot(self.weights_hidden_to_output, output_error_term)
         
-        # GROUP 3 (19/03/2021): hidden_error_term = W * error_term * sigmoid_prime(x) = 
-        # = W * (y - y_pred) * f'(x) * sigmoid_prime(x)
-        # = W * (y - y_pred) * 1 * (sigmoid(x) * (1 - sigmoid(x))) = hidden_error * (sigmoid(x) * (1 - sigmoid(x))) =
+        # Cálculo de la contribución al error de la capa de oculta, para ello se debe multiplicar la contribución al error de los
+        # pesos entre las capas oculta y final por la derivada de la función de activación de las neuronas de la capa oculta:
+        # hidden_error_term = W_h_o * output_error_term * sigmoid_prime(x) = W_h_o * (y - y_pred) * f'(x) * sigmoid_prime(x) =
+        # = W_h_o * (y - y_pred) * 1 * (sigmoid(x) * (1 - sigmoid(x))) = hidden_error * (sigmoid(x) * (1 - sigmoid(x))) =
         hidden_error_term = hidden_error.T * (hidden_outputs * (1 - hidden_outputs))
         
-        # Weight step (input to hidden)
-        
-        # GROUP 3 (19/03/2021): X * W * (y - y_pred) * f'(x) * sigmoid_prime(x) =
+        # Cálculo del cambio de los pesos entre los inputs y la capa oculta: X * W * (y - y_pred) * f'(x) * sigmoid_prime(x) =
         # = X * W * (y - y_pred) * 1 * (sigmoid(x) * (1 - sigmoid(x))) = X * hidden_error_term 
         delta_weights_i_h += X.reshape(-1, 1) * hidden_error_term
         
-        # Weight step (hidden to output)
-        
-        # GROUP 3 (19/03/2021): sigmoid(x) * (y - y_pred) * f'(x)  =
+        # Cálculo del cambio de los pesos entre la capa oculta y la capa de salida: sigmoid(x) * (y - y_pred) * f'(x)  =
         # = sigmoid(x) * (y - y_pred) * 1  = hidden_outputs * output_error_term
         delta_weights_h_o += hidden_outputs.reshape(-1, 1) * output_error_term
         
         return delta_weights_i_h, delta_weights_h_o
 
-    def update_weights(self, delta_weights_i_h, delta_weights_h_o, n_records):
-        ''' Update weights on gradient descent step
-         
-            Arguments
-            ---------
-            delta_weights_i_h: change in weights from input to hidden layers
-            delta_weights_h_o: change in weights from hidden to output layers
-            n_records: number of records
 
+    def update_weights(self, delta_weights_i_h, delta_weights_h_o, n_records):
+        ''' Actualización de los pesos en cada paso del "gradient descent"
+         
+            Parámetros
+            ---------
+            delta_weights_i_h: cambio de los pesos entre los inputs y la capa oculta
+            delta_weights_h_o: cambio de los pesos entre la capa oculta y la de salida
+            n_records: número de datos
         '''
         
-        # TODO: update hidden-to-output weights with gradient descent step
-        
-        # GROUP 3 (19/03/2021): (learning_rate * output_error_term * hidden_outputs) / n_records = 
+        # Se multiplica el cambio de los pesos entre los inputs y la capa oculta por el learning rate y luego se divide
+        # el resultado entre la cantidad de datos para obtener lo que deben actualizarse los pesos a cada paso del 
+        # "gradient descent": (learning_rate * hidden_outputs * output_error_term) / n_records = 
         # = (learning_rate * delta_weights_h_o) / n_records
         self.weights_hidden_to_output += (self.lr * delta_weights_h_o) / n_records 
         
-        # TODO: update input-to-hidden weights with gradient descent step
-        
-        # GROUP 3 (19/03/2021): (learning_rate * hidden_error_term * X) / n_records = 
+        # Se multiplica el cambio de los pesos entre la capa oculta y la de salida por el learning rate y luego se divide
+        # el resultado entre la cantidad de datos para obtener lo que deben actualizarse los pesos a cada paso del 
+        # "gradient descent": (learning_rate * X * hidden_error_term) / n_records = 
         # = (learning_rate * delta_weights_i_h) / n_records
         self.weights_input_to_hidden += (self.lr * delta_weights_i_h) / n_records 
 
+
     def run(self, features):
-        ''' Run a forward pass through the network with input features 
+        ''' Ejecución del feedforward con todos los features 
         
-            Arguments
+            Parámetros
             ---------
-            features: 1D array of feature values
+            features: array de una dimensión con los valores de los features
         '''
         
-        #### Implement the forward pass here ####
-        # TODO: Hidden layer - replace these values with the appropriate calculations.
-        
-        # signals into hidden layer
-        # Group 3 (19/03/2021): features * W_i_h 
+        # Cálculo de los valores de entrada de la capa oculta. Para ello se deben multiplicar todas las características por
+        # los pesos de las conexiones que hay entre los inputs (las características) y las neuronas de la capa oculta: X * W_i_h.
         hidden_inputs = np.dot(features, self.weights_input_to_hidden) 
 
-        # signals from hidden layer
-        # Group 3 (19/03/2021): sigmoid(hidden_inputs) 
+        # Cálculo de las salidas de las neuronas ocultas. Se utilizan los valores de entrada de cada neurona como inputs para
+        # su función de activación: sigmoid(hidden_inputs) 
         hidden_outputs = self.activation_function(hidden_inputs) 
         
-        # signals into final output layer
-        # Group 3 (19/03/2021): hidden_outputs * W_h_o
+        # Cálculo de los valores de entrada de la capa de salida de la red neuronal. Para ello se deben multiplicar las salidas
+        # de las neuronas ocultas por los pesos que hay entre la capa de oculta y la capa de salida: hidden_outputs * W_h_o
         final_inputs = np.dot(hidden_outputs, self.weights_hidden_to_output)  
         
-        # signals from final output layer
-        # Group 3 (19/03/2021): f(x) = x
+        # Cálculo de las salidas de las neuronas de salida de la red neuronal. Como la función de activación de las neuronas
+        # de esta capa es f(x) = x, simplemente se debe igualar el output de estas neuronas a su input.
         final_outputs = final_inputs 
         
         return final_outputs
