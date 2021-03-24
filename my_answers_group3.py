@@ -186,12 +186,63 @@ class NeuralNetwork(object):
 #########################################################
 # Set your hyperparameters here
 ##########################################################
+# Iteraciones para completar una época:
 # iterations = 1000
+
+# Incremento de distancia en la que cambia la pendiente del gradiente de descenso:
+# learning_rate = 0.1
+
+# Número de neuronas (nodes) de la capa oculta de la red neuronal:
+# hidden_nodes = 2
+
+# Número de salidas de la red neuronal (nodes):
+# output_nodes = 1
+
+# 2o intento:
+# iterations = 12000
+# learning_rate = 0.5
+# hidden_nodes = 23
+# output_nodes = 1
+
+# 3er intento:
+# iterations = 2000
+# learning_rate = 0.1
+# hidden_nodes = 8
+# output_nodes = 1
+
+
+# 4o intento:
+# iterations = 15000
+# learning_rate = 0.5
+# hidden_nodes = 8
+# output_nodes = 1
+
+# 5o intento: 
+# iterations = 500
 # learning_rate = 0.1
 # hidden_nodes = 2
 # output_nodes = 1
 
-iterations = 12000
-learning_rate = 0.5
-hidden_nodes = 23
+# 6o intento:
+# iterations = 800
+# learning_rate = 0.1
+# hidden_nodes = 3
+# output_nodes = 1
+
+# 7o intento:
+# iterations = 1200
+# learning_rate = 0.1
+# hidden_nodes = 2
+# output_nodes = 1
+
+# 8o intento:
+# iterations = 12000
+# learning_rate = 0.1
+# hidden_nodes = 2
+# output_nodes = 1
+
+# 9o intento:
+iterations = 1000
+learning_rate = 0.1
+hidden_nodes = 2
 output_nodes = 1
